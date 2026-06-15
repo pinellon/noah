@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chá Rifa do Noah 🍼</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky: #b8dff7;
+    --sky-dark: #7ec8f0;
+    --blue: #1a6fb5;
+    --blue-light: #3d9bd4;
+    --navy: #0d3d6e;
+    --gold: #f5c842;
+    --gold-dark: #d4a80a;
+    --white: #ffffff;
+    --cloud: #e8f5fd;
+    --text: #1a3a5c;
+    --red: #e05555;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #c9e8f7 0%, #e8f5fd 60%, #d4eefc 100%);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── ADMIN BAR ── */
+  .admin-bar {
+    background: var(--navy);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .admin-bar span {
+    color: var(--gold);
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .btn-admin {
+    background: var(--gold);
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    color: var(--navy);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .btn-admin:hover { opacity: 0.85; }
+
+  /* ── ADMIN MODAL ── */
+  .admin-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,20,45,0.7);
+    z-index: 200;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .admin-overlay.open { display: flex; }
+  .admin-modal {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 24px 20px;
+    max-width: 420px;
+    width: 100%;
+    margin: auto;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    animation: popIn 0.22s ease;
+  }
+  .admin-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .admin-sub {
+    font-size: 0.82rem;
+    color: var(--blue-light);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  /* password gate */
+  .pwd-gate { margin-bottom: 16px; }
+  .pwd-gate input {
+    width: 100%;
+    border: 2px solid var(--sky-dark);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--navy);
+    outline: none;
+    margin-bottom: 8px;
+  }
+  .pwd-gate input:focus { border-color: var(--blue); }
+  .pwd-error { color: var(--red); font-size: 0.82rem; font-weight: 700; display: none; }
+
+  /* grid selector inside admin */
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+  .admin-last { display: flex; justify-content: center; gap: 5px; margin-bottom: 14px; }
+
+  .adm-btn {
+    aspect-ratio: 1;
+    border: 2px solid var(--sky-dark);
+    border-radius: 8px;
+    background: var(--white);
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.78rem;
+    color: var(--navy);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .adm-btn.adm-taken {
+    background: #1a6fb5;
+    color: #fff;
+    border-color: #0d3d6e;
+  }
+  .adm-btn:hover { transform: scale(1.08); }
+
+  .admin-footer {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-save {
+    flex: 1;
+    background: var(--blue);
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--white);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-save:hover { opacity: 0.88; }
+  .btn-cancel {
+    background: #eee;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* hidden sections inside admin modal */
+  .admin-content { display: none; }
+  .admin-content.visible { display: block; }
+
+  /* ── BUNTING ── */
+  .bunting {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+    padding-top: 6px;
+  }
+  .bunting svg { width: 100%; max-width: 600px; }
+
+  /* ── HERO ── */
+  .hero { text-align: center; padding: 8px 20px 24px; }
+
+  .cloud-badge {
+    display: inline-block;
+    background: var(--white);
+    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    padding: 18px 40px 22px;
+    box-shadow: 0 6px 24px rgba(13,61,110,0.13);
+    position: relative;
+    margin-bottom: 4px;
+  }
+  .cloud-badge::before, .cloud-badge::after {
+    content: '';
+    position: absolute;
+    background: var(--white);
+    border-radius: 50%;
+  }
+  .cloud-badge::before { width: 60px; height: 52px; top: -20px; left: 24px; }
+  .cloud-badge::after  { width: 80px; height: 68px; top: -28px; right: 20px; }
+
+  .title-small {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--navy);
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+  .title-big {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3.6rem;
+    color: var(--blue);
+    display: block;
+    position: relative;
+    z-index: 1;
+    line-height: 1;
+    text-shadow: 0 3px 0 rgba(13,61,110,0.15);
+  }
+  .subtitle {
+    font-size: 1rem;
+    color: var(--blue);
+    font-weight: 700;
+    margin-top: 10px;
+  }
+
+  /* ── PRIZE BANNER ── */
+  .prize-banner {
+    background: var(--white);
+    border: 3px solid var(--sky-dark);
+    border-radius: 18px;
+    padding: 14px 22px;
+    margin: 0 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(13,61,110,0.10);
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .prize-label {
+    font-family: 'Fredoka One', cursive;
+    background: var(--navy);
+    color: var(--gold);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .prize-values { text-align: left; line-height: 1.5; font-weight: 700; color: var(--navy); font-size: 1rem; }
+  .prize-1st { font-size: 1.1rem; }
+  .prize-2nd { color: var(--blue); }
+
+  /* ── RULES ── */
+  .rules { max-width: 480px; margin: 0 auto 28px; padding: 0 20px; }
+  .rules ul { list-style: none; }
+  .rules li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .rules li::before { content: '●'; color: var(--blue); font-size: 0.7rem; margin-top: 3px; flex-shrink: 0; }
+
+  /* ── NUMBERS GRID ── */
+  .section-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.25rem;
+    color: var(--navy);
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .numbers-wrap { max-width: 480px; margin: 0 auto 28px; padding: 0 16px; }
+  .numbers-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+
+  .num-btn {
+    aspect-ratio: 1;
+    border: 2.5px solid var(--sky-dark);
+    border-radius: 10px;
+    background: var(--white);
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.95rem;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .num-btn:hover { background: var(--sky); transform: scale(1.06); }
+  .num-btn.taken {
+    background: #d0eaff;
+    color: var(--blue);
+    cursor: default;
+    opacity: 0.65;
+    border-color: #90c4e8;
+    pointer-events: none;
+    font-size: 0;
+  }
+  .num-btn.taken::after { content: '✓'; font-size: 0.85rem; }
+  .num-btn.selected {
+    background: var(--gold);
+    border-color: var(--gold-dark);
+    color: var(--navy);
+    transform: scale(1.08);
+    box-shadow: 0 3px 10px rgba(212,168,10,0.35);
+  }
+
+  .last-row { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
+  .last-row .num-btn { width: calc((100% / 8) - 2px); max-width: 54px; aspect-ratio: 1; }
+
+  /* ── SUMMARY ── */
+  .summary-box {
+    background: var(--white);
+    border: 2.5px solid var(--sky-dark);
+    border-radius: 18px;
+    padding: 18px 20px;
+    max-width: 480px;
+    margin: 0 auto 20px;
+  }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+  .summary-row:last-child { margin-bottom: 0; }
+  .summary-total { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--navy); }
+  .summary-total span { color: var(--blue); font-size: 1.5rem; }
+  .selected-nums { font-size: 0.85rem; color: var(--blue-light); font-weight: 600; word-break: break-all; }
+  .divider { border: none; border-top: 1.5px dashed var(--sky-dark); margin: 10px 0; }
+
+  /* ── FORM ── */
+  .form-wrap { max-width: 480px; margin: 0 auto 18px; padding: 0 16px; }
+  .form-wrap label { display: block; font-weight: 800; font-size: 0.92rem; color: var(--navy); margin-bottom: 5px; }
+  .form-wrap input {
+    width: 100%;
+    border: 2.5px solid var(--sky-dark);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--navy);
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--white);
+  }
+  .form-wrap input:focus { border-color: var(--blue); }
+
+  /* ── CTA ── */
+  .cta-wrap { max-width: 480px; margin: 0 auto 30px; padding: 0 16px; text-align: center; }
+  .btn-pix {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 16px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 5px 18px rgba(26,111,181,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-pix:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,111,181,0.45); }
+  .btn-pix:disabled { opacity: 0.5; cursor: default; transform: none; }
+  .pix-key { margin-top: 10px; font-size: 0.85rem; color: var(--blue); font-weight: 700; }
+
+  /* ── PIX MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,35,70,0.55);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    animation: popIn 0.25s ease;
+  }
+  @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .modal-title { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: var(--navy); margin-bottom: 6px; }
+  .modal-sub { font-size: 0.92rem; color: var(--blue); font-weight: 600; margin-bottom: 18px; }
+  .pix-box {
+    background: var(--cloud);
+    border: 2px dashed var(--sky-dark);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--navy);
+    letter-spacing: 0.05em;
+    cursor: pointer;
+  }
+  .copy-hint { font-family: 'Nunito', sans-serif; font-size: 0.78rem; color: var(--blue-light); font-weight: 600; margin-top: 4px; }
+  .modal-info { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 18px; line-height: 1.5; }
+  .modal-info strong { color: var(--navy); }
+  .btn-close {
+    background: var(--gold);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 32px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: var(--navy);
+    cursor: pointer;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    padding: 10px 24px;
+    border-radius: 50px;
+    z-index: 300;
+    transition: transform 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  footer {
+    text-align: center;
+    padding: 14px 20px 30px;
+    font-size: 0.78rem;
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  @media (max-width: 380px) {
+    .title-big { font-size: 2.8rem; }
+    .num-btn { font-size: 0.82rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ADMIN BAR -->
+<div class="admin-bar">
+  <span>⚙️ Painel Admin</span>
+  <button class="btn-admin" onclick="openAdmin()">Atualizar números vendidos</button>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-modal">
+    <div class="admin-title">🔐 Área Admin</div>
+    <p class="admin-sub">Somente para atualizar quais números foram vendidos</p>
+
+    <!-- PASSWORD GATE -->
+    <div class="pwd-gate" id="pwd-gate">
+      <input type="password" id="pwd-input" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')checkPwd()">
+      <p class="pwd-error" id="pwd-error">Senha incorreta, tente novamente.</p>
+      <div class="admin-footer">
+        <button class="btn-save" onclick="checkPwd()">Entrar</button>
+        <button class="btn-cancel" onclick="closeAdmin()">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- CONTENT (shown after password) -->
+    <div class="admin-content" id="admin-content">
+      <p style="font-size:0.82rem;font-weight:700;color:var(--blue);margin-bottom:10px;">
+        Clique nos números para marcar/desmarcar como <strong style="color:var(--navy)">vendido (azul)</strong>
+      </p>
+      <div class="admin-grid" id="admin-grid"></div>
+      <div class="admin-last" id="admin-last"></div>
+      <div class="admin-footer" style="margin-top:4px;">
+        <button class="btn-save" onclick="saveAdmin()">💾 Salvar</button>
+        <button class="btn-cancel" onclick="closeAdmin()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUNTING -->
+<div class="bunting">
+  <svg viewBox="0 0 600 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 12 Q75 4 150 16 Q225 28 300 12 Q375 0 450 16 Q525 28 600 12" stroke="#90c4e8" stroke-width="2" fill="none"/>
+    <polygon points="55,14 70,14 62.5,30" fill="#1a6fb5"/>
+    <polygon points="120,22 135,22 127.5,38" fill="#f5c842"/>
+    <polygon points="185,10 200,10 192.5,26" fill="#1a6fb5"/>
+    <polygon points="250,24 265,24 257.5,40" fill="#f5c842"/>
+    <polygon points="315,8 330,8 322.5,24" fill="#1a6fb5"/>
+    <polygon points="380,18 395,18 387.5,34" fill="#f5c842"/>
+    <polygon points="445,12 460,12 452.5,28" fill="#1a6fb5"/>
+    <polygon points="510,24 525,24 517.5,40" fill="#f5c842"/>
+  </svg>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="cloud-badge">
+    <span class="title-small">Chá Rifa do</span>
+    <span class="title-big">Noah</span>
+  </div>
+  <p class="subtitle">🍼 Garanta seu número e concorra a prêmios incríveis! 🍼</p>
+</section>
+
+<!-- PRIZE BANNER -->
+<div class="prize-banner">
+  <span class="prize-label">🏆 Prêmio</span>
+  <div class="prize-values">
+    <div class="prize-1st">1º Ganhador: <strong>R$150,00</strong></div>
+    <div class="prize-2nd">2º Ganhador: R$50,00</div>
+  </div>
+</div>
+
+<!-- RULES -->
+<div class="rules">
+  <ul>
+    <li>Cada número equivale a um pacote de fralda ou R$30</li>
+    <li>Sorteio realizado quando a rifa fechar</li>
+    <li>Mimo opcional — surpresa para quem participar 🎁</li>
+  </ul>
+</div>
+
+<!-- NUMBERS GRID -->
+<div class="numbers-wrap">
+  <p class="section-title">Escolha seu(s) número(s)</p>
+  <div class="numbers-grid" id="grid"></div>
+  <div class="last-row" id="last-row"></div>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary-box" id="summary" style="display:none;">
+  <div class="summary-row">
+    <span>Números selecionados:</span>
+    <span class="selected-nums" id="sel-display">—</span>
+  </div>
+  <hr class="divider">
+  <div class="summary-row">
+    <span class="summary-total">Total:</span>
+    <span class="summary-total"><span id="total-val">R$0</span></span>
+  </div>
+</div>
+
+<!-- NAME INPUT -->
+<div class="form-wrap">
+  <label for="buyer-name">Seu nome completo</label>
+  <input type="text" id="buyer-name" placeholder="Ex: Maria Silva" autocomplete="name">
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap">
+  <button class="btn-pix" id="btn-pay" onclick="openModal()" disabled>
+    Pagar via PIX 💙
+  </button>
+  <p class="pix-key">Chave PIX: 11943022963</p>
+</div>
+
+<!-- PIX MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">💙 Pagar com PIX</div>
+    <p class="modal-sub">Copie a chave e realize o pagamento</p>
+    <div class="pix-box" onclick="copyPix()">
+      11943022963
+      <div class="copy-hint">Toque para copiar 📋</div>
+    </div>
+    <div class="modal-info" id="modal-info"></div>
+    <button class="btn-close" onclick="closeModal()">Feito! ✓</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Chave copiada! ✓</div>
+
+<footer>
+  Após o pagamento, envie o comprovante no WhatsApp 💬<br>
+  Feito com amor para o pequeno Noah 🌟
+</footer>
+
+<script>
+  // ── CONFIG ──
+  const PIX_KEY   = '11943022963';
+  const PRICE_PER = 30;
+  const ADMIN_PWD = 'noah2025'; // 🔒 Troque para a senha que quiser
+
+  // Números vendidos são salvos no localStorage para persistir entre acessos
+  const STORAGE_KEY = 'noah_rifa_taken';
+
+  function loadTaken() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  function saveTaken(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+
+  let taken    = loadTaken();
+  let selected = [];
+  let adminTemp = [];
+
+  // ── BUILD PUBLIC GRID ──
+  function buildGrid() {
+    document.getElementById('grid').innerHTML = '';
+    document.getElementById('last-row').innerHTML = '';
+
+    for (let n = 1; n <= 48; n++) {
+      document.getElementById('grid').appendChild(makePublicBtn(n));
+    }
+    for (let n = 49; n <= 50; n++) {
+      document.getElementById('last-row').appendChild(makePublicBtn(n));
+    }
+  }
+
+  function makePublicBtn(n) {
+    const btn = document.createElement('button');
+    const isTaken = taken.includes(n);
+    btn.className = 'num-btn' + (isTaken ? ' taken' : '');
+    btn.textContent = isTaken ? '' : String(n).padStart(2, '0');
+    btn.setAttribute('aria-label', 'Número ' + n);
+    if (!isTaken) btn.onclick = () => togglePublic(n, btn);
+    return btn;
+  }
+
+  function togglePublic(n, btn) {
+    if (selected.includes(n)) {
+      selected = selected.filter(x => x !== n);
+      btn.classList.remove('selected');
+    } else {
+      selected.push(n);
+      btn.classList.add('selected');
+    }
+    selected.sort((a, b) => a - b);
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const summary  = document.getElementById('summary');
+    const selDisp  = document.getElementById('sel-display');
+    const totalVal = document.getElementById('total-val');
+    const btnPay   = document.getElementById('btn-pay');
+
+    if (selected.length === 0) {
+      summary.style.display = 'none';
+      btnPay.disabled = true;
+    } else {
+      summary.style.display = 'block';
+      selDisp.textContent = selected.map(n => String(n).padStart(2, '0')).join(', ');
+      totalVal.textContent = 'R$' + (selected.length * PRICE_PER).toLocaleString('pt-BR') + ',00';
+      btnPay.disabled = false;
+    }
+  }
+
+  // ── PIX MODAL ──
+  function openModal() {
+    const name = document.getElementById('buyer-name').value.trim();
+    if (!name) {
+      const inp = document.getElementById('buyer-name');
+      inp.focus();
+      inp.style.borderColor = '#e05555';
+      setTimeout(() => inp.style.borderColor = '', 1500);
+      return;
+    }
+    const nums  = selected.map(n => String(n).padStart(2, '0')).join(', ');
+    const total = selected.length * PRICE_PER;
+    document.getElementById('modal-info').innerHTML =
+      `<strong>${name}</strong>, seus números são: <strong>${nums}</strong><br>
+       Valor a pagar: <strong>R$${total.toLocaleString('pt-BR')},00</strong><br><br>
+       Após pagar, envie o comprovante 💬`;
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  function copyPix() {
+    navigator.clipboard.writeText(PIX_KEY).then(() => showToast('Chave copiada! ✓'));
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // ── ADMIN ──
+  function openAdmin() {
+    // reset password gate
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-error').style.display = 'none';
+    document.getElementById('pwd-gate').style.display = 'block';
+    document.getElementById('admin-content').classList.remove('visible');
+    document.getElementById('admin-overlay').classList.add('open');
+  }
+
+  function closeAdmin() {
+    document.getElementById('admin-overlay').classList.remove('open');
+  }
+
+  function checkPwd() {
+    const val = document.getElementById('pwd-input').value;
+    if (val === ADMIN_PWD) {
+      document.getElementById('pwd-error').style.display = 'none';
+      document.getElementById('pwd-gate').style.display = 'none';
+      document.getElementById('admin-content').classList.add('visible');
+      buildAdminGrid();
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+      document.getElementById('pwd-input').value = '';
+      document.getElementById('pwd-input').focus();
+    }
+  }
+
+  function buildAdminGrid() {
+    adminTemp = [...taken];
+    const grid = document.getElementById('admin-grid');
+    const last = document.getElementById('admin-last');
+    grid.innerHTML = '';
+    last.innerHTML = '';
+
+    for (let n = 1; n <= 48; n++) grid.appendChild(makeAdminBtn(n));
+    for (let n = 49; n <= 50; n++) {
+      const b = makeAdminBtn(n);
+      b.style.width = 'calc(100%/8 - 2px)';
+      b.style.maxWidth = '48px';
+      last.appendChild(b);
+    }
+  }
+
+  function makeAdminBtn(n) {
+    const btn = document.createElement('button');
+    btn.className = 'adm-btn' + (adminTemp.includes(n) ? ' adm-taken' : '');
+    btn.textContent = String(n).padStart(2, '0');
+    btn.id = 'adm-' + n;
+    btn.onclick = () => toggleAdmin(n, btn);
+    return btn;
+  }
+
+  function toggleAdmin(n, btn) {
+    if (adminTemp.includes(n)) {
+      adminTemp = adminTemp.filter(x => x !== n);
+      btn.classList.remove('adm-taken');
+    } else {
+      adminTemp.push(n);
+      btn.classList.add('adm-taken');
+    }
+  }
+
+  function saveAdmin() {
+    taken = [...adminTemp].sort((a,b) => a-b);
+    saveTaken(taken);
+    // clear user selection that might now be taken
+    selected = selected.filter(n => !taken.includes(n));
+    buildGrid();
+    updateSummary();
+    closeAdmin();
+    showToast('✓ Números atualizados!');
+  }
+
+  document.getElementById('admin-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeAdmin();
+  });
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── INIT ──
+  buildGrid();
+</script>
+</body>
+</html>
